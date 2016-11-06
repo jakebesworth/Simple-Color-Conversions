@@ -1,4 +1,5 @@
 .DS_STORE
 *.o
 a.out
+main.c
 Makefile

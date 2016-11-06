@@ -35,9 +35,10 @@
 
 void convertCMYtoRGB(const float c, const float m, const float y, unsigned char * r, unsigned char * g, unsigned char * b)
 {
-    *r = (1.0 - c) * 255.0;
-    *g = (1.0 - m) * 255.0;
-    *b = (1.0 - y) * 255.0;
+    /* Perform a cheap ceiling because e.g. it returns 9.99~ which truncates to 9 */
+    *r = ((1.0 - c) * 255.0) + 0.5;
+    *g = ((1.0 - m) * 255.0) + 0.5;
+    *b = ((1.0 - y) * 255.0) + 0.5;
 }
 
 void convertRGBtoCMY(const unsigned char r, const unsigned char g, const unsigned char b, float * c, float * m, float * y)
@@ -50,9 +51,9 @@ void convertRGBtoCMY(const unsigned char r, const unsigned char g, const unsigne
 void convertCMYtoCMYK(float * c, float * m, float * y, float * k)
 {
     *k = MIN3(*c, *m, *y);
-    *c = (*c - *k) / (1.0 - *k);
-    *m = (*m - *k) / (1.0 - *k);
-    *y = (*y - *k) / (1.0 - *k);
+    *c = ((int) *k == 1) ? 1 : (*c - *k) / (1.0 - *k);
+    *m = ((int) *k == 1) ? 1 : (*m - *k) / (1.0 - *k);
+    *y = ((int) *k == 1) ? 1 : (*y - *k) / (1.0 - *k);
 
 }
 
@@ -95,54 +96,56 @@ void convertHSVtoRGB(const float h, const float s, const float v, unsigned char 
     if(primary == 0)
     {
         /* 0: R = v, G = c, B = a */
-        *r = v;
-        *g = z;
-        *b = x;
+        *r = (v * 255.0) + 0.5;
+        *g = (z * 255.0) + 0.5;
+        *b = (x * 255.0) + 0.5;
     }
     else if(primary == 1)
     {
         /* 1: R = b, G = v, B = a */
-        *r = y;
-        *g = v;
-        *b = x;
+        *r = (y * 255.0) + 0.5;
+        *g = (v * 255.0) + 0.5;
+        *b = (x * 255.0) + 0.5;
     }
     else if(primary == 2)
     {
         /* 2: R = a, G = v, B = c */
-        *r = x;
-        *g = v;
-        *b = z;
+        *r = (x * 255.0) + 0.5;
+        *g = (v * 255.0) + 0.5;
+        *b = (z * 255.0) + 0.5;
     }
     else if(primary == 3)
     {
         /* 3: R = a, G = b, B = v */
-        *r = x;
-        *g = y;
-        *b = v;
+        *r = (x * 255.0) + 0.5;
+        *g = (y * 255.0) + 0.5;
+        *b = (v * 255.0) + 0.5;
     }
     else if(primary == 4)
     {
         /* 4: R = c, G = a, B = v */
-        *r = z;
-        *g = x;
-        *b = v;
+        *r = (z * 255.0) + 0.5;
+        *g = (x * 255.0) + 0.5;
+        *b = (v * 255.0) + 0.5;
     }
     else if(primary == 5)
     {
         /* 5: R = v, G = a, B = b */
-        *r = v;
-        *g = x;
-        *b = y;
+        *r = (v * 255.0) + 0.5;
+        *g = (x * 255.0) + 0.5;
+        *b = (y * 255.0) + 0.5;
     }
 }
 
 void convertRGBtoHSV(const unsigned char r, const unsigned char g, const unsigned char b, float * h, float * s, float * v)
 {
     const unsigned char max = MAX3(r, g, b);
+    const float max2 = max / 255.0;
     const unsigned char min = MIN3(r, g, b);
+    const float min2 = min / 255.0;
 
-    *s = (max - min) / max;
-    *v = max;
+    *s = (max2 < 0.0001) ? 0 : (max2 - min2) / max2;
+    *v = max2;
 
     /* Saturation is 0 */
     if((*s * 100.0) < 0.1)
@@ -151,35 +154,42 @@ void convertRGBtoHSV(const unsigned char r, const unsigned char g, const unsigne
         *h = 0;
         return;
     }
-    else if(r == max && g == min)
-    {
-        /* H = 5 + B' */
-        *h = 5 + (max - b) / (max - min);
-    }
-    else if(r == max && g != min)
-    {
-        /* H = 1 - G' */
-        *h = 1 - (max - g) / (max - min);
-    }
-    else if(g == max && b == min)
-    {
-        /* H = R' + 1 */
-        *h = (max - r) / (max - min) + 1;
-    }
-    else if(g == max && b != min)
-    {
-        /* H = 3 - B' */
-        *h = 3 - (max - b) / (max - min);
-    }
     else if(r == max)
     {
+        if(g == min)
+        {
+            /* H = 5 + B' */
+            *h = 5 + (max2 - (b / 255.0)) / (max2 - min2);
+        }
+        else
+        {
+            /* H = 1 - G' */
+            *h = 1 - (max2 - (g / 255.0)) / (max2 - min2);
+        }
+    }
+    else if(g == max)
+    {
+        if(b == min)
+        {
+            /* H = R' + 1 */
+            *h = ((max2 - (r / 255.0)) / (max2 - min2)) + 1;
+        }
+        else
+        {
+            /* H = 3 - B' */
+            *h = 3 - (max2 - (b / 255.0)) / (max2 - min2);
+        }
+    }
+    /* This is actually a problem with the original paper, I've fixed it here, should email them... */
+    else if(b == max && r == min)
+    {
         /* H = 3 + G' */
-        *h = 3 + (max - g) / (max - min);
+        *h = 3 + (max2 - (g / 255.0)) / (max2 - min2);
     }
     else
     {
         /* H = 5 - R' */
-        *h = 5 - (max - r) / (max - min);
+        *h = 5 - (max2 - (r / 255.0)) / (max2 - min2);
     }
 
     /* Hue is then converted to degrees by multiplying by 60 */
