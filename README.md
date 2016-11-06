@@ -1,4 +1,4 @@
-# Simple Color Conversion
+# Simple Color Conversions
 
 ## About
 
