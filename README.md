@@ -38,6 +38,8 @@ convertRGBtoHSV(147, 135, 95, &h, &s, &v);
 
 * Need help implementing the other color space conversions (maybe CMY -> HSV through the RGB functions) such as XYZ
 
+* Need help testing portability and how casting and cheap ceiling implementation work on other systems and compilers
+
 ## Contributors
 
 * [Jake Besworth](https://github.com/jakebesworth)
