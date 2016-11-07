@@ -159,12 +159,12 @@ void convertRGBtoHSV(const unsigned char r, const unsigned char g, const unsigne
         if(g == min)
         {
             /* H = 5 + B' */
-            *h = 5 + (max2 - (b / 255.0)) / (max2 - min2);
+            *h = 5 + ((max2 - (b / 255.0)) / (max2 - min2));
         }
         else
         {
             /* H = 1 - G' */
-            *h = 1 - (max2 - (g / 255.0)) / (max2 - min2);
+            *h = 1 - ((max2 - (g / 255.0)) / (max2 - min2));
         }
     }
     else if(g == max)
@@ -177,19 +177,19 @@ void convertRGBtoHSV(const unsigned char r, const unsigned char g, const unsigne
         else
         {
             /* H = 3 - B' */
-            *h = 3 - (max2 - (b / 255.0)) / (max2 - min2);
+            *h = 3 - ((max2 - (b / 255.0)) / (max2 - min2));
         }
     }
     /* This is actually a problem with the original paper, I've fixed it here, should email them... */
     else if(b == max && r == min)
     {
         /* H = 3 + G' */
-        *h = 3 + (max2 - (g / 255.0)) / (max2 - min2);
+        *h = 3 + ((max2 - (g / 255.0)) / (max2 - min2));
     }
     else
     {
         /* H = 5 - R' */
-        *h = 5 - (max2 - (r / 255.0)) / (max2 - min2);
+        *h = 5 - ((max2 - (r / 255.0)) / (max2 - min2));
     }
 
     /* Hue is then converted to degrees by multiplying by 60 */
