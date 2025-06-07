@@ -43,3 +43,4 @@ convertRGBtoHSV(147, 135, 95, &h, &s, &v);
 ## Contributors
 
 * [Jake Besworth](https://github.com/jakebesworth)
+* [Stoneman](https://github.com/shishirong)
