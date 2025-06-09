@@ -93,7 +93,10 @@ void convertHSVtoRGB(const float h, const float s, const float v, unsigned char 
     const float y = (1.0 - (s * secondary)) * v;
     const float z = (1.0 - (s * (1.0 - secondary))) * v;
 
-    if(primary == 0)
+    /* 360 hue (same as 0 hue) is not accounted for in the original paper.
+     * Other implementations of HSV to RGB use modulo instead of a division
+     * where 0 and 6 both result in primary == 0. I've fixed it here. */
+    if(primary == 0 || primary == 6)
     {
         /* 0: R = v, G = c, B = a */
         *r = (v * 255.0) + 0.5;
@@ -180,7 +183,7 @@ void convertRGBtoHSV(const unsigned char r, const unsigned char g, const unsigne
             *h = 3 - ((max2 - (b / 255.0)) / (max2 - min2));
         }
     }
-    /* This is actually a problem with the original paper, I've fixed it here, should email them... */
+    /* This is actually a problem with the original paper, I've fixed it here */
     else if(b == max && r == min)
     {
         /* H = 3 + G' */
